@@ -45,7 +45,7 @@ export default function PulseNetDashboard() {
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [ingesting, setIngesting] = useState(false)
   const [evaluating, setEvaluating] = useState(false)
-  const [now, setNow] = useState(new Date())
+  const [now, setNow] = useState<Date | null>(null) // null on SSR → avoids hydration mismatch; set after mount
   const detailReqId = useRef(0)
 
   const refreshAll = useCallback(async () => {
@@ -77,6 +77,9 @@ export default function PulseNetDashboard() {
   useEffect(() => {
     refreshAll()
     loadGraph()
+    // Start the live clock only on the client (after hydration) to avoid
+    // a server/client timestamp mismatch hydration error.
+    setNow(new Date())
     const tick = setInterval(() => setNow(new Date()), 1000)
     const poll = setInterval(() => refreshAll(), 60000)
     return () => {
@@ -221,7 +224,7 @@ export default function PulseNetDashboard() {
               <Radio className="h-3 w-3" /> FEEDS LIVE
             </span>
             <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-2 py-1 font-mono-data text-[10px] text-muted-foreground">
-              <Clock className="h-3 w-3" /> {fmtClock(now)}
+              <Clock className="h-3 w-3" /> {now ? fmtClock(now) : '--:--:-- UTC'}
             </span>
             {stats && (
               <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-2 py-1 text-[10px] text-muted-foreground">
