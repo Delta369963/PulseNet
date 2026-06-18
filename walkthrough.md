@@ -273,6 +273,7 @@ seeded trade graph + 2 replay events. Safe to run any time.
 | `prisma` errors after schema change | Run `bun run db:push` to sync the schema, then re-seed |
 | Port 3000 already in use | The dev server should auto-restart on file changes; if a stale instance is running, kill it and re-run `bun run dev` |
 | `bun install` fails with `error: An unknown error occurred (Unexpected)` **on your local machine** | This is expected — `z-ai-web-dev-sdk` is a Z.ai-sandbox-internal package not on public npm. Run the project inside the sandbox instead (see §1). If you must run locally, see §10. |
+| `Error code 14: Unable to open the database file` | The `.env` had a hard-coded sandbox path. As of this version, `DATABASE_URL` is a **relative** path (`file:../db/custom.db`) and `src/lib/db.ts` resolves it via `process.cwd()`, so it works on any machine. If you're on an old checkout, pull the latest `.env` and `src/lib/db.ts`, then re-run `bun run db:push && bun run prisma/seed.ts`. |
 
 ---
 
