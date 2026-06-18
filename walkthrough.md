@@ -12,6 +12,18 @@ dependency graph, then handing a human administrator a one-click way to stop it.
 
 ## 1. Quick start (3 steps)
 
+> **⚠️ Read this first — the project runs inside the Z.ai cloud sandbox, not on your local machine.**
+>
+> PulseNet depends on `z-ai-web-dev-sdk`, which is a **Z.ai-sandbox-internal package** — it is
+> *not* on the public npm registry, and it authenticates via **ambient sandbox credentials**
+> (there are no API keys in `.env`). If you run `bun install` on your local MacBook/PC, you will
+> get `error: An unknown error occurred (Unexpected)` because your local bun cannot resolve the
+> internal SDK. **This is expected.**
+>
+> To use PulseNet, run it **inside this sandbox** (the dev server is already running on port 3000)
+> and view it via the **Preview Panel** → "Open in New Tab". Do not try to run it locally unless
+> you're prepared to swap the Z.ai SDK for a public AI provider (see §10).
+
 ```bash
 # 1. Install dependencies (already done in this environment, but for reference)
 bun install
@@ -260,6 +272,7 @@ seeded trade graph + 2 replay events. Safe to run any time.
 | Reroute cards show deterministic text instead of LLM text | The LLM call failed or timed out; the deterministic fallback kicked in. The reroute is still valid. |
 | `prisma` errors after schema change | Run `bun run db:push` to sync the schema, then re-seed |
 | Port 3000 already in use | The dev server should auto-restart on file changes; if a stale instance is running, kill it and re-run `bun run dev` |
+| `bun install` fails with `error: An unknown error occurred (Unexpected)` **on your local machine** | This is expected — `z-ai-web-dev-sdk` is a Z.ai-sandbox-internal package not on public npm. Run the project inside the sandbox instead (see §1). If you must run locally, see §10. |
 
 ---
 
@@ -271,6 +284,92 @@ seeded trade graph + 2 replay events. Safe to run any time.
 - ✅ **Human-in-the-loop** — every reroute ends at an Approve / Reject / Adjust step
 - ✅ **Audit trail** — every action (ingest, evaluate, approve, reject, adjust, dismiss) is logged with actor + timestamp
 - ✅ **Honest uncertainty** — Monte Carlo reports both median and p95 shortage windows, plus success probability, so the human sees the worst case
+
+---
+
+## 10. Running PulseNet on your local machine (advanced)
+
+PulseNet is built to run inside the Z.ai cloud sandbox, where the `z-ai-web-dev-sdk`
+and its ambient credentials are available automatically. If you want to run it on your
+own machine (e.g. for a hackathon demo or offline development), you need to swap the
+Z.ai SDK for a **public AI provider** of your choice.
+
+### What's portable as-is
+- The entire **Prisma schema + SQLite database** (trade graph, shocks, exposures, reroutes, decisions)
+- The **graph traversal + Monte Carlo ripple logic** (`src/lib/pulsenet/ripple.ts`) — pure TypeScript, no AI
+- The **geo utilities** (`src/lib/pulsenet/geo.ts`) — pure TypeScript
+- The **USGS earthquake fetch** in `src/lib/pulsenet/ingest.ts` — public API, no key
+- The **entire frontend dashboard** — Next.js + shadcn/ui, no AI calls
+- The **seed data** (`prisma/seed.ts`)
+
+### What needs replacing
+The only file that touches the Z.ai SDK is `src/lib/pulsenet/zai.ts`. It exposes three
+capabilities used by the app:
+
+| Function | Used by | Public alternative |
+|---|---|---|
+| `llmComplete(system, user)` | Ingestion (parse news → structured events), Ripple (enrich reroute titles/rationales) | Google Gemini API (`@google/generative-ai`), OpenAI (`openai`), Anthropic (`@anthropic-ai/sdk`), or any OpenAI-compatible endpoint |
+| `webSearch(query, num)` | Ingestion (find supply-chain news) | Bing Web Search API, Serper.dev, Tavily, or Brave Search API |
+| (image generation — only used for the world-map asset, not at runtime) | n/a | Skip; the `public/world-map.png` is already generated and committed |
+
+### Porting steps
+
+1. **Remove the internal SDK and clean the lockfile:**
+   ```bash
+   rm bun.lock node_modules -rf
+   # In package.json, delete the line: "z-ai-web-dev-sdk": "^0.0.18"
+   bun install
+   ```
+
+2. **Pick a public LLM provider** and install its SDK, e.g.:
+   ```bash
+   bun add @google/generative-ai   # Gemini (matches your original spec)
+   ```
+
+3. **Rewrite `src/lib/pulsenet/zai.ts`** to implement the same three exports
+   (`getZai` is no longer needed — drop it):
+   ```typescript
+   import { GoogleGenerativeAI } from '@google/generative-ai'
+
+   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+
+   export async function llmComplete(systemPrompt: string, userPrompt: string): Promise<string> {
+     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', systemInstruction: systemPrompt })
+     const res = await model.generateContent(userPrompt)
+     return res.response.text()
+   }
+
+   export async function webSearch(query: string, num = 8) {
+     // Use your preferred search API (Serper/Tavily/Bing) and map results to
+     // { url, name, snippet, host_name, date } — the shape ingest.ts expects.
+     // ... 
+   }
+
+   export function parseJsonArray<T = unknown>(raw: string): T[] {
+     // unchanged — this is pure parsing logic
+   }
+   ```
+   The rest of the codebase (`ingest.ts`, `ripple.ts`) calls only these three functions,
+   so no other changes are needed.
+
+4. **Add your API key** to `.env`:
+   ```bash
+   GEMINI_API_KEY=your_key_here
+   # plus a key for whatever search API you chose
+   ```
+
+5. **Run locally:**
+   ```bash
+   bun run db:push
+   bun run prisma/seed.ts
+   bun run dev
+   ```
+   Open `http://localhost:3000` in your browser.
+
+### Notes
+- Your original spec (§3.6) already identified Gemini 2.5 Flash as the target model and noted the free-tier rate limits — that porting path is well-trodden.
+- The Monte Carlo simulation, graph traversal, equity-weighted confidence, and HITL controls are all deterministic TypeScript and will behave identically locally.
+- The `parseJsonArray` helper tolerates markdown fences and extracts the first `[...]` block, so it works with any LLM that occasionally wraps JSON in prose.
 
 ---
 
