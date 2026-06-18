@@ -1,0 +1,120 @@
+// PulseNet — predictive decision-support for critical resource shortages
+// Static trade dependency graph + live shock events + ripple evaluations + HITL decisions
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Country {
+  id                String      @id @default(cuid())
+  code              String      @unique // ISO 3-letter, e.g. IND, SAU
+  name              String
+  region            String // South Asia, Middle East, etc.
+  lat               Float
+  lng               Float
+  monitoringDensity Float // 0..1 equity-weighted proxy (low => flagged low-confidence)
+  suppliesFrom      TradeEdge[] @relation("SupplierEdges")
+  consumesFrom      TradeEdge[] @relation("ConsumerEdges")
+}
+
+model Commodity {
+  id       String      @id @default(cuid())
+  code     String      @unique // LPG, DIESEL, WHEAT, PHARMA
+  name     String
+  category String // energy | food | medical
+  unit     String // kt, barrels, tonnes
+  edges    TradeEdge[]
+}
+
+// Directional trade relationship: supplier -> consumer for a commodity
+model TradeEdge {
+  id          String    @id @default(cuid())
+  supplierId  String
+  consumerId  String
+  commodityId String
+  volume      Float // annual baseline volume in commodity unit
+  share       Float // 0..1 share of consumer's import of this commodity from this supplier
+  supplier    Country   @relation("SupplierEdges", fields: [supplierId], references: [id])
+  consumer    Country   @relation("ConsumerEdges", fields: [consumerId], references: [id])
+  commodity   Commodity @relation(fields: [commodityId], references: [id])
+}
+
+model ShockEvent {
+  id           String   @id @default(cuid())
+  externalId   String   @unique // dedupe key from source
+  source       String // USGS | GDACS | WebSearch | ACLED
+  sourceUrl    String?
+  title        String
+  description  String
+  type         String // earthquake | flood | cyclone | conflict | port_closure | grid_failure | border_restriction | strike
+  severity     String // low | moderate | high | severe
+  lat          Float?
+  lng          Float?
+  locationName String
+  countryCodes String // JSON array of affected country codes
+  occurredAt   DateTime
+  ingestedAt   DateTime @default(now())
+  status       String   @default("new") // new | evaluated | dismissed
+  confidence   Float // 0..1 ingestion confidence
+  exposures    ExposedRegion[]
+  reroutes     RerouteSuggestion[]
+}
+
+model ExposedRegion {
+  id                  String   @id @default(cuid())
+  shockId             String
+  shock               ShockEvent @relation(fields: [shockId], references: [id], onDelete: Cascade)
+  countryCode         String
+  countryName         String
+  region              String
+  lat                 Float
+  lng                 Float
+  commodityCode       String
+  commodityName       String
+  exposurePath        String // human-readable causal chain
+  depth               Int // 0 = direct, 1+ downstream hops
+  timeToShortageDays  Int // estimated
+  riskScore           Float // 0..100
+  confidence          Float // 0..1 (lowered by low monitoring density)
+  monitoringDensity   Float
+  reroutes            RerouteSuggestion[]
+}
+
+model RerouteSuggestion {
+  id                   String   @id @default(cuid())
+  shockId              String
+  shock                ShockEvent @relation(fields: [shockId], references: [id], onDelete: Cascade)
+  exposedRegionId      String?
+  exposedRegion        ExposedRegion? @relation(fields: [exposedRegionId], references: [id], onDelete: Cascade)
+  title                String
+  rationale            String
+  fromSupplier         String
+  toSupplier           String
+  commodityCode        String
+  commodityName        String
+  affectedRegion       String
+  estimatedCostIncrease Float // percent
+  estimatedTimeToAddDays Int
+  feasibilityScore     Float // 0..1
+  confidence           Float
+  monteCarloOutcome    String // JSON summary of simulation
+  status               String   @default("pending") // pending | approved | rejected | adjusted
+  adminNote            String?
+  decidedAt            DateTime?
+  decidedBy            String?
+  createdAt            DateTime @default(now())
+}
+
+model AdminDecision {
+  id        String   @id @default(cuid())
+  action    String // approve | reject | adjust | dismiss | ingest | reset
+  summary   String
+  actor     String   @default("administrator")
+  metadata  String?
+  createdAt DateTime @default(now())
+}
