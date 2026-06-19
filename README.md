@@ -1,0 +1,49 @@
+# PulseNet v2: Debugging & Architecture
+
+## Known Issues Addressed in this Branch
+
+### 1. Re-Evaluation "0 Exposed Regions / 0 Routes" Bug
+**The Issue:**
+When evaluating the supply chain ripple for certain ingested events, the UI would silently return `0 exposed regions, 0 reroutes proposed`, making it appear as though the calculations were broken.
+**The Root Cause:**
+- **Cache Masking:** Next.js was heavily caching the `/api/shocks/[id]` route. When an evaluation finished, the UI fetched the updated state, but Next.js instantly returned the old, un-evaluated JSON from memory.
+- **Missing Toy Data:** The backend operates on a 20-country toy trade graph (`seed.ts`). If an event (e.g., an earthquake in Argentina) occurred outside these 20 countries, the graph traversal safely exited and returned `note: "No mapped supplier countries for this event."` However, the UI ignored this note and gave zero feedback.
+**The Fix:**
+- Added `{ cache: 'no-store' }` to the frontend fetch to guarantee real-time updates.
+- Added a UI toast notification to explicitly display the engine's `note` when 0 exposures are generated, so users know *why* the evaluation stopped.
+
+### 2. Ingestion Sparseness ("Nothing New Added")
+**The Issue:**
+Clicking "Ingest" often resulted in very few events appearing, or simply did nothing, despite feeds like Reuters having hundreds of articles.
+**The Root Cause:**
+- **Batch Constraints:** To prevent LLM rate-limiting, the system was constrained to `max_feed_items = 14`. Because it pulls from 10+ feeds concurrently, a high-volume feed like Reuters might only get 1 or 2 articles into the batch.
+- **Silent Deduplication:** If the news hadn't updated, the system successfully downloaded the feeds, identified them as duplicates using `externalId`, and silently skipped them.
+**The Fix:**
+- Built an **Ingestion Debugger Architecture**. The UI now features a targeted ingestion strip (`[USGS] [GDACS] [ReliefWeb] [Reuters-Biz] [ACLED]`).
+- The Next.js proxy and Python backend now accept a `?source=` parameter. When targeted, the engine drops all other feeds, isolates the target source, and temporarily bumps the limit to 20 items, allowing you to flood the AI with a single source's data.
+- Updated the UI to explicitly notify the user if duplicates were skipped (e.g., `"Feed up to date: No new real-world events detected (14 duplicates skipped)."`).
+
+### 3. Database Ghost Sessions
+**The Issue:**
+Running `make reset` cleared the main tables but left the `SystemicConsensusLedger` intact, causing the Responsible AI panel to display ghost logs from previous sessions.
+**The Fix:**
+- Added `await db.systemicConsensusLedger.deleteMany()` to the teardown phase of `prisma/seed.ts`.
+
+---
+
+## Brief Architecture Overview for Teammates
+
+PulseNet v2 is a predictive decision-support engine divided into two tiers:
+
+1. **The Python Engine (FastAPI)**
+   - **Ingestion (`services/ingest_service.py`)**: Fetches raw data concurrently from RSS feeds, USGS GeoJSON, and ACLED APIs. Uses Gemini LLMs to structure unstructured news into `ShockEvent` objects (conflict, earthquake, etc.).
+   - **Evaluation (`services/ripple_service.py`)**: Takes a `ShockEvent`, maps it to the toy trade graph (SQLite), and calculates downstream supply shortages using the Systemic Risk Index (SRI). It then proposes humanitarian inbound supply routes or outbound export reroutes using a Monte Carlo simulation.
+
+2. **The Frontend (Next.js App Router)**
+   - **UI Component Layer**: Provides the visual Threat Board, Feed, and Responsible AI logging panel.
+   - **API Proxies (`src/app/api`)**: Connects the UI to the Python engine while wrapping requests in fail-safes and fallback Typescript evaluators.
+
+### How to use the Debug Architecture
+When working on the Python agents, always use the **Targeted Ingest** strip below the UI header to test specific feeds in isolation. If you modify the `seed.ts` trade graph, run `make reset` to obliterate the SQLite database and start fresh.
+
+> **Note**: This branch includes the `.env` file explicitly pushed so that the team can access the necessary API keys and database configuration without setup overhead.
