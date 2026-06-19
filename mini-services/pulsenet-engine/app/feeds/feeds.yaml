@@ -1,0 +1,114 @@
+# PulseNet feed registry — RSS-first, keyless open-data + ACLED OAuth.
+#
+# One dead feed never breaks a run (return_exceptions=True in registry).
+# Google News RSS is used as a reliable proxy for blocked sources (Reuters, AP,
+# Bloomberg) using Google search operators. Format:
+#   https://news.google.com/rss/search?q=<query>&hl=en-US&gl=US&ceid=US:en
+# Supports: site:, when:, OR, AND operators.
+
+usgs:
+  enabled: true   # structured GeoJSON — no LLM needed
+
+# ACLED conflict feed — enabled automatically when ACLED_ACCESS_TOKEN is set.
+acled:
+  days_back: 14
+
+rss:
+  # ── Disaster / humanitarian sources (direct feeds, verified working) ─────
+  - name: GDACS
+    url: https://www.gdacs.org/xml/rss.xml
+    lang: en
+    enabled: true
+    max_items: 40
+
+  - name: ReliefWeb
+    url: https://reliefweb.int/updates/rss.xml
+    lang: en
+    enabled: true
+    max_items: 25
+
+  # ── Global news / conflict / geopolitics (direct feeds) ──────────────────
+  - name: BBC-World
+    url: https://feeds.bbci.co.uk/news/world/rss.xml
+    lang: en
+    enabled: true
+    max_items: 35
+
+  - name: AlJazeera
+    url: https://www.aljazeera.com/xml/rss/all.xml
+    lang: en
+    enabled: true
+    max_items: 25
+
+  # ── Google News RSS proxies (bypasses site-level blocks on Reuters/AP) ────
+  # Reuters: supply chain, conflict, humanitarian via Google News aggregation
+  - name: GNews-Reuters
+    url: https://news.google.com/rss/search?q=site:reuters.com+supply+chain+OR+conflict+OR+humanitarian+OR+food+shortage+when:12h&hl=en-US&gl=US&ceid=US:en
+    lang: en
+    enabled: true
+    max_items: 20
+
+  # AP News: conflict + humanitarian focus
+  - name: GNews-AP
+    url: https://news.google.com/rss/search?q=site:apnews.com+war+OR+conflict+OR+humanitarian+OR+sanctions+when:12h&hl=en-US&gl=US&ceid=US:en
+    lang: en
+    enabled: true
+    max_items: 15
+
+  # Maritime / shipping disruptions (Hormuz, Suez, port closures)
+  - name: GNews-Maritime
+    url: https://news.google.com/rss/search?q=port+closure+OR+Strait+Hormuz+OR+Suez+canal+OR+shipping+disruption+when:24h&hl=en-US&gl=US&ceid=US:en
+    lang: en
+    enabled: true
+    max_items: 25
+
+  # Conflict + humanitarian: wars, airstrikes, civilian supply needs
+  - name: GNews-Conflict
+    url: https://news.google.com/rss/search?q=conflict+humanitarian+aid+OR+airstrike+OR+shelling+OR+ceasefire+when:12h&hl=en-US&gl=US&ceid=US:en
+    lang: en
+    enabled: true
+    max_items: 20
+
+  # Refugee / displacement crisis (directly triggers inbound aid routing)
+  - name: GNews-Refugee
+    url: https://news.google.com/rss/search?q=refugee+crisis+OR+displaced+people+OR+famine+OR+mass+displacement+when:24h&hl=en-US&gl=US&ceid=US:en
+    lang: en
+    enabled: true
+    max_items: 25
+
+  # Pharmaceutical supply shortages
+  - name: GNews-Pharma
+    url: https://news.google.com/rss/search?q=medicine+shortage+OR+pharmaceutical+supply+disruption+OR+drug+shortage+when:48h&hl=en-US&gl=US&ceid=US:en
+    lang: en
+    enabled: true
+    max_items: 20
+
+  # Food / wheat / grain crisis
+  - name: GNews-FoodCrisis
+    url: https://news.google.com/rss/search?q=wheat+shortage+OR+grain+export+ban+OR+food+insecurity+OR+food+supply+crisis+when:48h&hl=en-US&gl=US&ceid=US:en
+    lang: en
+    enabled: true
+    max_items: 20
+
+  # ── GDELT: broad geopolitical + supply-chain filter ───────────────────────
+  - name: GDELT
+    url: https://api.gdeltproject.org/api/v2/doc/doc?query=(port+closure+OR+fuel+shortage+OR+supply+chain+disruption+OR+conflict+humanitarian+OR+sanctions)&mode=rssarticles&format=rss
+    lang: en
+    enabled: true
+    max_items: 20
+
+  # ── Native-language regional (disabled by default; LLM translates) ────────
+  - name: LeMonde-Economie
+    url: https://www.lemonde.fr/economie/rss_full.xml
+    lang: fr
+    enabled: false
+
+  - name: NHK-Japan
+    url: https://www3.nhk.or.jp/rss/news/cat0.xml
+    lang: ja
+    enabled: false
+
+  - name: Xinhua-EN
+    url: https://www.xinhuanet.com/english/rss/worldrss.xml
+    lang: en
+    enabled: false

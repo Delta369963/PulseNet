@@ -38,7 +38,7 @@ export function StatsBar({ stats }: { stats: Stats | null }) {
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
       <Stat icon={Zap} label="Live shocks" value={stats?.shocks ?? '—'} tone="text-amber-400" />
       <Stat icon={Layers} label="Exposed regions" value={stats?.exposures ?? '—'} tone="text-orange-400" />
-      <Stat icon={GitBranch} label="Pending reroutes" value={stats?.pendingReroutes ?? '—'} tone="text-emerald-400" hint="awaiting approval" />
+      <Stat icon={GitBranch} label="Pending reroutes" value={stats?.pendingReroutes ?? '—'} tone="text-zinc-300" hint="awaiting approval" />
       <Stat
         icon={ShieldAlert}
         label="Low-confidence"

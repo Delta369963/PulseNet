@@ -34,11 +34,11 @@ export function riskStyle(risk: number) {
   if (risk >= 75) return { bar: 'bg-red-500', text: 'text-red-400', label: 'CRITICAL' }
   if (risk >= 55) return { bar: 'bg-orange-500', text: 'text-orange-400', label: 'HIGH' }
   if (risk >= 40) return { bar: 'bg-amber-500', text: 'text-amber-400', label: 'ELEVATED' }
-  return { bar: 'bg-emerald-500', text: 'text-emerald-400', label: 'MODERATE' }
+  return { bar: 'bg-zinc-400', text: 'text-zinc-300', label: 'MODERATE' }
 }
 
 export function confidenceStyle(conf: number) {
-  if (conf >= 0.7) return { label: 'high', text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' }
+  if (conf >= 0.7) return { label: 'high', text: 'text-zinc-300', bg: 'bg-zinc-400/10', border: 'border-zinc-400/30' }
   if (conf >= 0.5) return { label: 'moderate', text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30' }
   return { label: 'low', text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' }
 }
@@ -46,7 +46,7 @@ export function confidenceStyle(conf: number) {
 export function rerouteStatusStyle(status: RerouteStatus) {
   switch (status) {
     case 'approved':
-      return { label: 'APPROVED', text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/40' }
+      return { label: 'APPROVED', text: 'text-zinc-300', bg: 'bg-zinc-400/10', border: 'border-zinc-400/40' }
     case 'rejected':
       return { label: 'REJECTED', text: 'text-zinc-400', bg: 'bg-zinc-500/10', border: 'border-zinc-500/40' }
     case 'adjusted':
@@ -59,7 +59,7 @@ export function rerouteStatusStyle(status: RerouteStatus) {
 export function shockStatusStyle(status: ShockStatus) {
   switch (status) {
     case 'evaluated':
-      return { label: 'EVALUATED', text: 'text-emerald-400', dot: 'bg-emerald-500' }
+      return { label: 'EVALUATED', text: 'text-zinc-300', dot: 'bg-zinc-400' }
     case 'dismissed':
       return { label: 'DISMISSED', text: 'text-zinc-500', dot: 'bg-zinc-600' }
     default:
@@ -87,7 +87,7 @@ export function sourceStyle(source: string) {
     case 'USGS':
       return { text: 'text-cyan-300', bg: 'bg-cyan-500/10', border: 'border-cyan-500/30' }
     case 'GDACS':
-      return { text: 'text-emerald-300', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' }
+      return { text: 'text-emerald-300', bg: 'bg-zinc-400/10', border: 'border-zinc-400/30' }
     case 'ACLED':
       return { text: 'text-orange-300', bg: 'bg-orange-500/10', border: 'border-orange-500/30' }
     case 'WebSearch':

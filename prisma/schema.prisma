@@ -18,9 +18,17 @@ model Country {
   lat               Float
   lng               Float
   monitoringDensity Float // 0..1 equity-weighted proxy (low => flagged low-confidence)
+  // --- Sovereign Recuperation Index (SRI) inputs ---
+  // SRI = w1*gdpPerCapita(norm) + w2*gridDensity - w3*historicalVolatility
+  // Models a nation's capacity to stabilize after an infrastructural blow.
+  gdpPerCapita        Float @default(0) // USD; World Bank NY.GDP.PCAP.CD
+  gridDensity         Float @default(0) // 0..1 normalized electrical-grid resilience proxy
+  historicalVolatility Float @default(0) // 0..1 normalized historical disruption volatility
+  sri                 Float @default(0) // computed Sovereign Recuperation Index (cached)
   suppliesFrom      TradeEdge[] @relation("SupplierEdges")
   consumesFrom      TradeEdge[] @relation("ConsumerEdges")
 }
+
 
 model Commodity {
   id       String      @id @default(cuid())
@@ -81,7 +89,9 @@ model ExposedRegion {
   timeToShortageDays  Int // estimated
   riskScore           Float // 0..100
   confidence          Float // 0..1 (lowered by low monitoring density)
+  cascadeConfidence   Float @default(0) // 0..1 — exposureShare × (1−recuperationFactor(SRI)), prompt §4
   monitoringDensity   Float
+
   reroutes            RerouteSuggestion[]
 }
 
@@ -118,3 +128,21 @@ model AdminDecision {
   metadata  String?
   createdAt DateTime @default(now())
 }
+
+// Responsible-AI / interpretability ledger (prompt §4).
+// Logs the multi-agent consensus state of every detected crisis so the entire
+// reasoning chain is transparent and reproducible. Written by the Python engine.
+model SystemicConsensusLedger {
+  crisisId               String   @id @default(cuid())
+  timestamp              DateTime @default(now())
+  shockId                String? // link back to the ShockEvent, if persisted
+  sourceFeedUrl          String
+  detectedShockVector    String // JSON: { lat, lng, severity, initialAsset }
+  agentAlphaRaw          String // JSON: raw structured generation from Gemini Key A
+  agentBetaRaw           String // JSON: raw structured generation from Gemini Key B
+  byzantineAgreementDelta Float // 0..1 variance between Alpha and Beta predictions
+  calculatedCascadeDag   String // JSON: resulting prediction tree with confidences
+  humanInTheLoopOverride Boolean  @default(false)
+  authorizedByAdmin      String?
+}
+

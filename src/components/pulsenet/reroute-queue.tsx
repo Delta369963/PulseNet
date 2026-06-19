@@ -37,11 +37,11 @@ function Metric({
   tone?: string
 }) {
   return (
-    <div className="rounded-md border border-border bg-background/40 px-2 py-1.5">
-      <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-muted-foreground">
+    <div className="rounded-sm border border-border bg-background/40 px-1.5 py-1">
+      <div className="flex items-center gap-1 text-[8px] uppercase tracking-wide text-muted-foreground">
         <Icon className="h-2.5 w-2.5" /> {label}
       </div>
-      <div className={cn('font-mono-data text-xs font-semibold', tone)}>{value}</div>
+      <div className={cn('font-mono-data text-[11px] font-semibold', tone)}>{value}</div>
     </div>
   )
 }
@@ -78,7 +78,7 @@ function RerouteCard({
   return (
     <div
       className={cn(
-        'rounded-lg border bg-card p-3',
+        'rounded-sm border bg-card p-2.5',
         reroute.status === 'pending'
           ? lowConf
             ? 'border-red-500/30'
@@ -87,7 +87,7 @@ function RerouteCard({
       )}
     >
       <div className="flex items-start gap-2">
-        <GitBranch className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+        <GitBranch className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-300" />
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold leading-snug">{reroute.title}</h3>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -103,19 +103,19 @@ function RerouteCard({
       </p>
 
       {/* from -> to */}
-      <div className="mt-2 flex items-center gap-1.5 rounded-md border border-border bg-background/40 px-2 py-1.5 text-[11px]">
-        <span className="truncate font-medium text-amber-300/90">{reroute.fromSupplier}</span>
-        <ArrowRight className="h-3 w-3 shrink-0 text-emerald-400" />
-        <span className="truncate font-semibold text-emerald-400">{reroute.toSupplier}</span>
+      <div className="mt-2 flex items-center gap-1.5 rounded-sm border border-border bg-background/40 px-2 py-1 text-[10px]">
+        <span className="truncate font-mono-data text-amber-300/90">{reroute.fromSupplier}</span>
+        <ArrowRight className="h-3 w-3 shrink-0 text-zinc-300" />
+        <span className="truncate font-mono-data text-zinc-300">{reroute.toSupplier}</span>
       </div>
 
       {/* metrics */}
       <div className="mt-2 grid grid-cols-2 gap-1.5">
-        <Metric icon={Activity} label="Success prob" value={successPct != null ? `${successPct}%` : '—'} tone={successPct != null && successPct >= 50 ? 'text-emerald-400' : successPct != null && successPct >= 35 ? 'text-amber-400' : 'text-red-400'} />
+        <Metric icon={Activity} label="Success prob" value={successPct != null ? `${successPct}%` : '—'} tone={successPct != null && successPct >= 50 ? 'text-zinc-300' : successPct != null && successPct >= 35 ? 'text-amber-400' : 'text-red-400'} />
         <Metric icon={Clock} label="Shortage window" value={mc ? `~${mc.medianShortageWindow}d (p95 ${mc.p95ShortageWindow}d)` : '—'} tone="text-amber-300" />
         <Metric icon={DollarSign} label="Cost increase" value={`+${reroute.estimatedCostIncrease}%`} tone="text-orange-300" />
         <Metric icon={Clock} label="Time to add" value={`+${reroute.estimatedTimeToAddDays}d`} />
-        <Metric icon={Gauge} label="Feasibility" value={`${Math.round(reroute.feasibilityScore * 100)}%`} tone={reroute.feasibilityScore >= 0.6 ? 'text-emerald-400' : 'text-amber-400'} />
+        <Metric icon={Gauge} label="Feasibility" value={`${Math.round(reroute.feasibilityScore * 100)}%`} tone={reroute.feasibilityScore >= 0.6 ? 'text-zinc-300' : 'text-amber-400'} />
         <Metric icon={Activity} label="MC trials" value={mc ? String(mc.trials) : '—'} />
       </div>
 
@@ -148,27 +148,27 @@ function RerouteCard({
                 size="sm"
                 disabled={busy}
                 onClick={() => handle('approve')}
-                className="h-7 flex-1 bg-emerald-600 text-white hover:bg-emerald-500"
+                className="h-7 flex-1 rounded-sm bg-zinc-500 text-white hover:bg-zinc-400 font-mono-data uppercase tracking-wider text-[10px]"
               >
-                <Check className="h-3.5 w-3.5" /> Approve
+                <Check className="h-3.5 w-3.5 mr-1" /> Approve
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 disabled={busy}
                 onClick={() => setAdjusting(true)}
-                className="h-7 flex-1 border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+                className="h-7 flex-1 rounded-sm border-amber-500/40 text-amber-300 hover:bg-amber-500/10 font-mono-data uppercase tracking-wider text-[10px]"
               >
-                <Pencil className="h-3.5 w-3.5" /> Adjust
+                <Pencil className="h-3.5 w-3.5 mr-1" /> Adjust
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 disabled={busy}
                 onClick={() => handle('reject')}
-                className="h-7 flex-1"
+                className="h-7 flex-1 rounded-sm font-mono-data uppercase tracking-wider text-[10px] hover:bg-red-900/20 hover:text-red-400 hover:border-red-500/40"
               >
-                <X className="h-3.5 w-3.5" /> Reject
+                <X className="h-3.5 w-3.5 mr-1" /> Reject
               </Button>
             </div>
           ) : (
@@ -223,10 +223,10 @@ export function RerouteQueue({
   const pending = reroutes.filter((r) => r.status === 'pending')
   const decided = reroutes.filter((r) => r.status !== 'pending')
   return (
-    <div className="flex h-full flex-col rounded-lg border border-border bg-card/50">
+    <div className="flex h-full flex-col rounded-sm border border-border bg-card/50">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-2">
-          <GitBranch className="h-3.5 w-3.5 text-emerald-400" />
+          <GitBranch className="h-3.5 w-3.5 text-zinc-300" />
           <h2 className="text-xs font-semibold tracking-wide">REROUTE QUEUE · HUMAN APPROVAL</h2>
         </div>
         <span className="font-mono-data text-[10px] text-amber-300">{pending.length} pending</span>
@@ -238,7 +238,7 @@ export function RerouteQueue({
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center text-muted-foreground">
             <GitBranch className="h-8 w-8 opacity-40" />
             <p className="text-xs">No reroutes for this shock.</p>
-            <p className="text-[11px]">Select a shock and click <span className="font-semibold text-emerald-400">Evaluate Ripple</span>.</p>
+            <p className="text-[11px]">Select a shock and click <span className="font-semibold text-zinc-300">Evaluate Ripple</span>.</p>
           </div>
         ) : (
           <>

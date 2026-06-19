@@ -6,7 +6,7 @@ import { timeAgo } from './helpers'
 import type { Decision } from './types'
 
 const ACTION_META: Record<string, { icon: React.ComponentType<{ className?: string }>; tone: string; label: string }> = {
-  approve: { icon: Check, tone: 'text-emerald-400 bg-emerald-500/10', label: 'APPROVED' },
+  approve: { icon: Check, tone: 'text-zinc-300 bg-zinc-400/10', label: 'APPROVED' },
   reject: { icon: X, tone: 'text-zinc-400 bg-zinc-500/10', label: 'REJECTED' },
   adjust: { icon: Pencil, tone: 'text-amber-400 bg-amber-500/10', label: 'ADJUSTED' },
   dismiss: { icon: Ban, tone: 'text-zinc-400 bg-zinc-500/10', label: 'DISMISSED' },
@@ -20,7 +20,7 @@ export function AuditTrail({ decisions, loading }: { decisions: Decision[]; load
     <div className="rounded-lg border border-border bg-card/50">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-2">
-          <History className="h-3.5 w-3.5 text-emerald-400" />
+          <History className="h-3.5 w-3.5 text-zinc-300" />
           <h2 className="text-xs font-semibold tracking-wide">DECISION LOG · AUDIT TRAIL</h2>
         </div>
         <span className="font-mono-data text-[10px] text-muted-foreground">{decisions.length}</span>

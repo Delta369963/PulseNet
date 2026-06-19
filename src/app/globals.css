@@ -7,7 +7,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-jetbrains-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -79,37 +79,38 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  /* Hacker Linux Base - Deep Purple/Indigo (oklch) */
+  --background: oklch(0.18 0.05 280); /* Deep indigo/purple */
+  --foreground: oklch(0.95 0.02 280); /* Off-white with purple tint */
+  --card: oklch(0.20 0.05 280);
+  --card-foreground: oklch(0.95 0.02 280);
+  --popover: oklch(0.20 0.05 280);
+  --popover-foreground: oklch(0.95 0.02 280);
+  --primary: oklch(0.65 0.25 15); /* Orange/Red accent */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.25 0.08 280);
+  --secondary-foreground: oklch(0.95 0.02 280);
+  --muted: oklch(0.25 0.08 280);
+  --muted-foreground: oklch(0.70 0.05 280);
+  --accent: oklch(0.25 0.08 280);
+  --accent-foreground: oklch(0.95 0.02 280);
+  --destructive: oklch(0.60 0.25 25);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --ring: oklch(0.65 0.25 15);
+  --chart-1: oklch(0.60 0.25 25);
+  --chart-2: oklch(0.70 0.15 160);
+  --chart-3: oklch(0.75 0.18 70);
+  --chart-4: oklch(0.65 0.25 300);
+  --chart-5: oklch(0.65 0.25 15);
+  --sidebar: oklch(0.20 0.05 280);
+  --sidebar-foreground: oklch(0.95 0.02 280);
+  --sidebar-primary: oklch(0.65 0.25 15);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.25 0.08 280);
+  --sidebar-accent-foreground: oklch(0.95 0.02 280);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.65 0.25 15);
 }
 
 @layer base {
@@ -124,14 +125,21 @@
 /* ---- PulseNet ops-dashboard enhancements ---- */
 @layer utilities {
   .font-mono-data {
-    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
   }
   .ops-grid-bg {
     background-image:
-      linear-gradient(to right, oklch(1 0 0 / 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(1 0 0 / 0.03) 1px, transparent 1px);
-    background-size: 28px 28px;
+      linear-gradient(to right, oklch(1 0 0 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  /* World state gradients */
+  .bg-gradient-calm {
+    background: radial-gradient(ellipse 120% 120% at 50% 0%, oklch(0.15 0.05 280 / 0.8) 0%, oklch(0.12 0.04 280) 100%);
+  }
+  .bg-gradient-conflict {
+    background: radial-gradient(ellipse 120% 120% at 50% 0%, oklch(0.25 0.12 30 / 0.7) 0%, oklch(0.12 0.04 280) 100%);
   }
   .ops-scanline {
     background: radial-gradient(

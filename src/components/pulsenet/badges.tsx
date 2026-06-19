@@ -96,7 +96,31 @@ export function SourceBadge({ source, className }: { source: string; className?:
   )
 }
 
+/** REPLAY badge — shown when the shock title contains "(replay)" (seeded scenarios). */
+export function ModeBadge({ title }: { title: string }) {
+  const isReplay = title.toLowerCase().includes('(replay)')
+  if (isReplay) {
+    return (
+      <span
+        className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-amber-400"
+        title="Historical replay scenario — used to validate forward-chaining accuracy against known outcomes."
+      >
+        ⏪ REPLAY
+      </span>
+    )
+  }
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md border border-zinc-400/30 bg-zinc-400/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-zinc-300"
+      title="Live ingested event — from real-time feeds (USGS / GDACS / ACLED / RSS)."
+    >
+      ● LIVE
+    </span>
+  )
+}
+
 export function LowConfidenceFlag({ className }: { className?: string }) {
+
   return (
     <span
       className={cn(

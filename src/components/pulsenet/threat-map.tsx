@@ -47,8 +47,8 @@ export function ThreatMap({ shocks, exposures, selectedShockId, countries, onSel
       {/* Coordinate grid overlay */}
       <div className="ops-grid-bg pointer-events-none absolute inset-0 opacity-60" />
       {/* Equator + prime meridian reference lines */}
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-emerald-500/10" />
-      <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px bg-emerald-500/10" />
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-zinc-400/10" />
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px bg-zinc-400/10" />
 
       {/* Ripple flow lines (selected shock -> each exposure) */}
       <svg
@@ -142,14 +142,14 @@ export function ThreatMap({ shocks, exposures, selectedShockId, countries, onSel
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" /> Severe</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /> High</span>
         <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> Moderate</span>
-        <span className="hidden items-center gap-1 sm:flex"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Exposure</span>
+        <span className="hidden items-center gap-1 sm:flex"><span className="h-2 w-2 rounded-full bg-zinc-400" /> Exposure</span>
       </div>
 
       {/* Count + last-update */}
       <div className="absolute right-2 top-2 rounded-md border border-border/60 bg-background/70 px-2 py-1 text-[10px] backdrop-blur">
         <span className="font-mono-data text-muted-foreground">{plottedShocks.length} plotted</span>
         {selected && (
-          <span className="ml-2 text-emerald-400">● {timeAgo(selected.shock.occurredAt)}</span>
+          <span className="ml-2 text-zinc-300">● {timeAgo(selected.shock.occurredAt)}</span>
         )}
       </div>
 

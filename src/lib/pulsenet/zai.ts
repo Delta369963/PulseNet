@@ -1,49 +1,79 @@
-import ZAI from 'z-ai-web-dev-sdk'
+/**
+ * AI helpers used by the legacy TS pipeline (ingest.ts / ripple.ts).
+ *
+ * This module previously used the z-ai-web-dev-sdk (sandbox-only).
+ * It now uses @google/generative-ai (public) with GEMINI_API_KEY_A.
+ *
+ * In normal operation the FastAPI engine handles all ingestion.
+ * This file only runs when the engine is offline (graceful fallback).
+ */
 
-// Singleton ZAI instance — created once, reused across requests.
-let _zai: Awaited<ReturnType<typeof ZAI.create>> | null = null
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-export async function getZai() {
-  if (!_zai) _zai = await ZAI.create()
-  return _zai
+// --- LLM ---
+
+let _genAI: GoogleGenerativeAI | null = null
+
+function getGenAI(): GoogleGenerativeAI | null {
+  const key = process.env.GEMINI_API_KEY_A ?? process.env.GEMINI_API_KEY ?? ''
+  if (!key) return null
+  if (!_genAI) _genAI = new GoogleGenerativeAI(key)
+  return _genAI
 }
 
 /** Single-shot LLM completion with a system + user message. */
 export async function llmComplete(systemPrompt: string, userPrompt: string): Promise<string> {
   try {
-    const zai = await getZai()
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'assistant', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      thinking: { type: 'disabled' },
+    const genAI = getGenAI()
+    if (!genAI) return ''
+    const model = genAI.getGenerativeModel({
+      model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+      systemInstruction: systemPrompt,
     })
-    return completion.choices[0]?.message?.content ?? ''
+    const result = await model.generateContent(userPrompt)
+    return result.response.text() ?? ''
   } catch (err) {
     console.error('[llmComplete] failed:', (err as Error).message)
     return ''
   }
 }
 
-/** Web search via the z-ai function API. */
-export async function webSearch(query: string, num = 8) {
+/**
+ * Web search — returns empty in the TS fallback path.
+ *
+ * The Python engine handles search via RSS feeds (GDACS, ReliefWeb, GDELT).
+ * When running TS-only, only the USGS structured feed works without a search key.
+ * Add a Serper/Tavily/Bing key to SEARCH_API_KEY to enable search in fallback mode.
+ */
+export async function webSearch(
+  query: string,
+  _num = 8,
+): Promise<Array<{ url: string; name: string; snippet: string; host_name: string; date: string }>> {
+  // Placeholder: swap this for your preferred search provider if needed.
+  const apiKey = process.env.SEARCH_API_KEY ?? ''
+  if (!apiKey) return []
+  // Example: Serper.dev
   try {
-    const zai = await getZai()
-    return (await zai.functions.invoke('web_search', { query, num })) as Array<{
-      url: string
-      name: string
-      snippet: string
-      host_name: string
-      date: string
-    }>
-  } catch (err) {
-    console.error('[webSearch] failed:', (err as Error).message)
+    const res = await fetch('https://google.serper.dev/search', {
+      method: 'POST',
+      headers: { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: query, num: _num }),
+    })
+    if (!res.ok) return []
+    const data = await res.json() as { organic?: Array<{ title: string; link: string; snippet: string }> }
+    return (data.organic ?? []).map((r) => ({
+      url: r.link ?? '',
+      name: r.title ?? '',
+      snippet: r.snippet ?? '',
+      host_name: new URL(r.link ?? 'https://unknown').hostname,
+      date: '',
+    }))
+  } catch {
     return []
   }
 }
 
-/** Tolerant JSON-array parser: strips markdown fences and extracts the first [ ... ] block. */
+/** Tolerant JSON-array parser: strips markdown fences, extracts the first [...] block. */
 export function parseJsonArray<T = unknown>(raw: string): T[] {
   if (!raw) return []
   let t = raw.trim()

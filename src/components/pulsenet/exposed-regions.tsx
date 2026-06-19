@@ -17,7 +17,7 @@ export function ExposedRegionsList({
     <div className="rounded-lg border border-border bg-card/50">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-2">
-          <Globe2 className="h-3.5 w-3.5 text-emerald-400" />
+          <Globe2 className="h-3.5 w-3.5 text-zinc-300" />
           <h2 className="text-xs font-semibold tracking-wide">EXPOSED REGIONS — DOWNSTREAM RISK</h2>
         </div>
         <span className="font-mono-data text-[10px] text-muted-foreground">{exposures.length}</span>
@@ -71,14 +71,23 @@ export function ExposedRegionsList({
                     <Clock className="h-3 w-3" /> shortage in ~{e.timeToShortageDays}d
                   </span>
                   <ConfidenceBadge confidence={e.confidence} />
+                  {e.cascadeConfidence > 0 && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-md border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-400"
+                      title={`Cascade P = exposure share × vulnerability (1−SRI). Reflects how likely this nation is to be hit given the shock, weighted by national resilience. Higher = more fragile nation with more exposure.`}
+                    >
+                      Cascade P: {Math.round(e.cascadeConfidence * 100)}%
+                    </span>
+                  )}
                   {lowConf && <LowConfidenceFlag />}
                 </div>
 
-                {/* causal path */}
+                {/* causal path — full trace, no line-clamp */}
                 <p className="mt-1.5 flex items-start gap-1 text-[10px] leading-relaxed text-muted-foreground">
-                  <ArrowRight className="mt-0.5 h-2.5 w-2.5 shrink-0 text-emerald-400" />
-                  <span className="line-clamp-2">{e.exposurePath}</span>
+                  <ArrowRight className="mt-0.5 h-2.5 w-2.5 shrink-0 text-zinc-300" />
+                  <span>{e.exposurePath}</span>
                 </p>
+
                 {lowConf && (
                   <p className="mt-1 flex items-center gap-1 text-[10px] text-red-400/80">
                     <AlertTriangle className="h-2.5 w-2.5" />
