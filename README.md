@@ -47,3 +47,24 @@ PulseNet v2 is a predictive decision-support engine divided into two tiers:
 When working on the Python agents, always use the **Targeted Ingest** strip below the UI header to test specific feeds in isolation. If you modify the `seed.ts` trade graph, run `make reset` to obliterate the SQLite database and start fresh.
 
 > **Note**: This branch includes the `.env` file explicitly pushed so that the team can access the necessary API keys and database configuration without setup overhead.
+
+## Testing & Debugging Report
+During active backend testing, the following edge cases and bugs were discovered and addressed:
+
+1. **Massive Geography Haversine Failures (USGS Ingestion)**
+   - **Error:** Earthquakes in far eastern Russia (e.g., Kamchatka) were consistently returning `[]` for mapped countries, resulting in `0 exposed regions`.
+   - **Root Cause:** The `nearest_countries` logic uses a `max_km = 1500.0` radius from a country's centroid. Russia's single centroid in the database is in central Siberia. Kamchatka is >3000km away, causing the geo-tagger to fail.
+   - **Status:** Documented. Future fix requires either increasing the radius, using bounding boxes, or relying on the LLM to parse the `location_name` string instead of purely mathematical centroids.
+
+2. **Missing Humanitarian Reroutes for UKR**
+   - **Error:** Ingesting a UKR conflict event generated outbound export reroutes (Wheat) but no inbound humanitarian aid (Pharma).
+   - **Root Cause:** The `seed.ts` toy database had 0 inbound edges mapped to `UKR`. The engine correctly halted inbound evaluation because it didn't know who supplied UKR.
+   - **Status:** **Fixed**. Added `DEU->UKR` and `FRA->UKR` Pharma edges to the seed database.
+
+3. **Confusing Humanitarian Aid Phrasing**
+   - **Error:** When generating an inbound humanitarian route, the engine used the outbound template, resulting in confusing titles like: `Reroute Ukraine Pharmaceuticals: Ukraine → France`.
+   - **Root Cause:** The `_build_reroutes` function did not fork its string templates based on the `is_inbound` flag.
+   - **Status:** **Fixed**. Added conditional logic. Inbound aid routes now read: `Humanitarian Surge Ukraine Pharmaceuticals: France → Ukraine`.
+
+4. **Rate Limiting vs Target Ingestion**
+   - **Status:** The new `Targeted Ingest` UI strip correctly bypasses the `max_feed_items = 14` limit by pushing `20` items exclusively from a single source. This successfully solved the ingestion sparseness issue during testing.

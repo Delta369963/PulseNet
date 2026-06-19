@@ -56,6 +56,7 @@ const EDGES: [string, string, string, number, number][] = [
   ['USA','KEN','WHEAT',320,0.20], ['IND','PAK','WHEAT',280,0.15],
   ['IND','KEN','PHARMA',4200,0.35], ['IND','NGA','PHARMA',3600,0.30], ['IND','ETH','PHARMA',2800,0.40],
   ['CHN','IND','PHARMA',5200,0.20], ['DEU','IND','PHARMA',6400,0.25], ['IND','BGD','PHARMA',5100,0.45],
+  ['DEU','UKR','PHARMA',3200,0.60], ['FRA','UKR','PHARMA',1500,0.20], ['IND','UKR','PHARMA',800,0.15],
 ]
 
 async function main() {
