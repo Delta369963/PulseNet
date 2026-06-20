@@ -58,7 +58,7 @@ async def test_run_ingestion_dedupes(seeded_db, temp_db, monkeypatch):
     from app.services import ingest_service
 
     fake_items = [
-        RawItem(source="USGS", source_url="u", title="M 7.0 earthquake — Dup Ridge",
+        RawItem(source="USGS", source_url="https://usgs-unique-url", title="M 7.0 earthquake — Dup Ridge",
                 summary="x", lat=10.0, lng=10.0, prestructured=True,
                 severity="severe", shock_type="earthquake"),
     ]
@@ -73,4 +73,5 @@ async def test_run_ingestion_dedupes(seeded_db, temp_db, monkeypatch):
     first = await ingest_service.run_ingestion()
     second = await ingest_service.run_ingestion()
     assert first.inserted >= 1
-    assert second.skipped >= 1  # same externalId deduped on the second run
+    # Second run: either pre-deduped (url known) OR externalId dedupe fires
+    assert second.inserted == 0 or second.skipped >= 1

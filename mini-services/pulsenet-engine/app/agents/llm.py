@@ -51,15 +51,22 @@ class GeminiClient:
             # google-generativeai is sync; run in a thread to stay async-friendly.
             resp = await asyncio.to_thread(model.generate_content, user_prompt)
             output_text = resp.text or ""
-            print(f"\\n--- GEMINI REQUEST ({self.model}) ---")
-            print(f"SYSTEM PROMPT:\\n{system_prompt}\\n")
-            print(f"USER PROMPT:\\n{user_prompt}\\n")
-            print(f"--- GEMINI RESPONSE ---\\n{output_text}\\n------------------------\\n", flush=True)
+            logger.debug(
+                "gemini completion",
+                extra={"extra": {"model": self.model, "response_len": len(output_text)}},
+            )
             return output_text
         except Exception as err:  # noqa: BLE001
             logger.warning("gemini completion failed", extra={"extra": {"err": str(err)}})
             return ""
 
+    async def complete_object(self, system_prompt: str, user_prompt: str) -> dict[str, Any]:
+        """Call complete() and parse result as a single JSON object."""
+        raw = await self.complete(system_prompt, user_prompt)
+        try:
+            return json.loads(raw) if raw else {}
+        except json.JSONDecodeError:
+            return {}
 
 
 def build_clients() -> tuple[GeminiClient, GeminiClient]:
