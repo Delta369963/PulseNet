@@ -68,3 +68,22 @@ During active backend testing, the following edge cases and bugs were discovered
 
 4. **Rate Limiting vs Target Ingestion**
    - **Status:** The new `Targeted Ingest` UI strip correctly bypasses the `max_feed_items = 14` limit by pushing `20` items exclusively from a single source. This successfully solved the ingestion sparseness issue during testing.
+
+5. **"Country Unresolvable" Edge Case**
+   - **Error:** When the LLM was rate-limited or failed to extract an ISO-3 country code from events like *"[CONFLICT] India Faces LPG Shortage"* the engine gave up and returned `0 exposures`.
+   - **Fix:** Implemented a deterministic text-matching fallback in `ripple_service.py` that scans the shock title for names present in the SQLite `Country` table. This acts as a robust safety net when the LLM is dark.
+
+6. **Broken Cascade Chain Verification**
+   - **Error:** Exposure paths for *inbound* humanitarian needs lacked the `→` arrow, breaking the cascade graph generation.
+   - **Fix:** Unified the path formatting across both inbound and outbound logic, ensuring proper causal chain detection.
+
+7. **Audit Trail Overwrite (HITL)**
+   - **Error:** The human-in-the-loop (HITL) approve/reject actions were being pushed out of the `/api/decisions` 60-item limit by hundreds of rapid `evaluate` records.
+   - **Fix:** Upgraded the API to support `?actor=...` filtering, allowing the frontend to pull specific audit records reliably.
+
+## Getting Started
+
+1. Ensure Python 3.11+ and Node.js are installed.
+2. The `.env` file is included in this repository branch for immediate access.
+3. Run `make install` to initialize the database and install dependencies.
+4. Run `make dev` to boot both the Next.js frontend and the FastAPI Python engine simultaneously.

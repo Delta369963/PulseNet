@@ -32,7 +32,7 @@ export function ConfidenceBadge({ confidence, className }: { confidence: number;
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide',
+        'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide whitespace-nowrap',
         s.border,
         s.bg,
         s.text,
@@ -40,8 +40,8 @@ export function ConfidenceBadge({ confidence, className }: { confidence: number;
       )}
       title={`Model confidence: ${pct}%`}
     >
-      <span className={cn('h-1.5 w-1.5 rounded-full', s.text.replace('text-', 'bg-'))} />
-      {s.label.toUpperCase()} · {pct}%
+      <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', s.text.replace('text-', 'bg-'))} />
+      <span className="truncate">{s.label.toUpperCase()} · {pct}%</span>
     </span>
   )
 }
@@ -84,14 +84,14 @@ export function SourceBadge({ source, className }: { source: string; className?:
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-mono-data tracking-wide',
+        'inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-mono-data tracking-wide whitespace-nowrap',
         s.border,
         s.bg,
         s.text,
         className,
       )}
     >
-      {source}
+      <span className="truncate">{source}</span>
     </span>
   )
 }

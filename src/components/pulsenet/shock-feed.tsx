@@ -34,15 +34,15 @@ function ShockCard({
         </div>
 
         {/* Bottom Row: Location & Data */}
-        <div className="flex items-center gap-2 pl-14">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0 max-w-[120px]">
-            <MapPin className="h-2.5 w-2.5" />
+        <div className="flex items-center gap-2 pl-14 w-full overflow-hidden pr-2">
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0 max-w-[100px]">
+            <MapPin className="h-2.5 w-2.5 shrink-0" />
             <span className="truncate">{shock.locationName}</span>
           </div>
-          <SourceBadge source={shock.source} />
-          <span className="font-mono-data text-[9px] text-muted-foreground border border-border px-1 rounded-sm bg-muted/40">EXP:{shock.exposureCount}</span>
-          <span className="font-mono-data text-[9px] text-muted-foreground border border-border px-1 rounded-sm bg-muted/40">RT:{shock.rerouteCount}</span>
-          <ConfidenceBadge confidence={shock.confidence} className="ml-auto scale-90 origin-right" />
+          <SourceBadge source={shock.source} className="shrink-0 max-w-[80px]" />
+          <span className="font-mono-data text-[9px] text-muted-foreground border border-border px-1 rounded-sm bg-muted/40 shrink-0">EXP:{shock.exposureCount}</span>
+          <span className="font-mono-data text-[9px] text-muted-foreground border border-border px-1 rounded-sm bg-muted/40 shrink-0">RT:{shock.rerouteCount}</span>
+          <ConfidenceBadge confidence={shock.confidence} className="ml-auto shrink-0 scale-90 origin-right" />
         </div>
       </div>
     </button>
