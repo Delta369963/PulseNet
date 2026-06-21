@@ -3,6 +3,9 @@
 Two clients (Key A / Key B) power the Alpha/Beta consensus. If a key is missing,
 that agent is "dark" and the caller falls back to deterministic parsing — the
 pipeline never hard-fails on a missing credential.
+
+Uses google-genai SDK (google.genai) — the modern replacement for the deprecated
+google.generativeai package.
 """
 
 from __future__ import annotations
@@ -18,7 +21,7 @@ logger = get_logger("agents.llm")
 
 
 class GeminiClient:
-    """Thin async wrapper around google-generativeai for one API key."""
+    """Thin async wrapper around google-genai for one API key."""
 
     def __init__(self, api_key: str, model: str):
         self.api_key = api_key
@@ -29,28 +32,30 @@ class GeminiClient:
         """Return raw JSON string, or '' on any failure (logged).
 
         Forces JSON-only output via response_mime_type — no markdown fences,
-        no prose, just valid JSON. This uses fewer tokens and avoids parsing
-        failures from the tolerant parser.
+        no prose, just valid JSON. Uses fewer tokens and avoids parsing failures.
         """
         if not self.available:
             return ""
         try:
             import asyncio
+            from google import genai
+            from google.genai import types
 
-            import google.generativeai as genai
-
-            genai.configure(api_key=self.api_key)
-            generation_config = genai.GenerationConfig(
+            client = genai.Client(api_key=self.api_key)
+            config = types.GenerateContentConfig(
+                system_instruction=system_prompt,
                 response_mime_type="application/json",
             )
-            model = genai.GenerativeModel(
-                self.model,
-                system_instruction=system_prompt,
-                generation_config=generation_config,
-            )
-            # google-generativeai is sync; run in a thread to stay async-friendly.
-            resp = await asyncio.to_thread(model.generate_content, user_prompt)
-            output_text = resp.text or ""
+
+            def _call() -> str:
+                response = client.models.generate_content(
+                    model=self.model,
+                    contents=user_prompt,
+                    config=config,
+                )
+                return response.text or ""
+
+            output_text = await asyncio.to_thread(_call)
             logger.debug(
                 "gemini completion",
                 extra={"extra": {"model": self.model, "response_len": len(output_text)}},

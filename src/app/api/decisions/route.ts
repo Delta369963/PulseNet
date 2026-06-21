@@ -4,12 +4,19 @@ import { db } from '@/lib/db'
 export const dynamic = 'force-dynamic'
 
 // GET /api/decisions — audit trail, newest first.
-export async function GET() {
+// Query params: ?actor=X (filter by actor), ?limit=N (default 100)
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const actorFilter = searchParams.get('actor') || undefined
+  const limit = Math.min(500, parseInt(searchParams.get('limit') || '100', 10))
+
   const decisions = await db.adminDecision.findMany({
+    where: actorFilter ? { actor: actorFilter } : undefined,
     orderBy: { createdAt: 'desc' },
-    take: 60,
+    take: limit,
   })
   return NextResponse.json({
+    total: decisions.length,
     decisions: decisions.map((d) => ({
       ...d,
       metadata: d.metadata ? JSON.parse(d.metadata) : null,

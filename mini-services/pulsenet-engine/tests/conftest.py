@@ -108,3 +108,53 @@ class FakeGemini:
 @pytest.fixture
 def fake_gemini():
     return FakeGemini
+
+
+@pytest.fixture
+def mock_trade_intel(monkeypatch):
+    """Patch query_trade_intel at the ripple_service import site.
+
+    This avoids hitting the Gemini API during pytest runs (free tier: 20 req/day).
+    Returns a TradeIntel configured for a conflict shock with WHEAT+DIESEL disrupted,
+    which matches the seeded_db graph (RUS/UKR supply EGY/KEN wheat).
+
+    Patches at app.services.ripple_service.query_trade_intel — the name that
+    ripple_service resolved when it did 'from app.agents.trade_intel import query_trade_intel'.
+    """
+    from app.agents.trade_intel import TradeIntel
+
+    async def _fake(*args, **kwargs):
+        shock_type = kwargs.get("shock_type") or (args[1] if len(args) > 1 else "conflict")
+        if shock_type in ("conflict", "port_closure", "strike", "border_restriction"):
+            return TradeIntel(
+                exports_disrupted={"LPG": False, "DIESEL": True, "WHEAT": True, "PHARMA": False},
+                needs_inbound={"LPG": False, "DIESEL": False, "WHEAT": False, "PHARMA": True},
+                commodity_priority=["WHEAT", "DIESEL", "PHARMA", "LPG"],
+                context_summary="Conflict disrupts wheat and diesel exports; PHARMA aid needed.",
+                affected_countries_hint=kwargs.get("country_codes") or [],
+                from_llm=True,
+            )
+        elif shock_type == "earthquake":
+            return TradeIntel(
+                exports_disrupted={"LPG": False, "DIESEL": False, "WHEAT": False, "PHARMA": False},
+                needs_inbound={"LPG": False, "DIESEL": False, "WHEAT": False, "PHARMA": False},
+                commodity_priority=["DIESEL", "LPG", "PHARMA", "WHEAT"],
+                context_summary="Minor earthquake — no major supply chain disruption expected.",
+                affected_countries_hint=kwargs.get("country_codes") or [],
+                from_llm=True,
+            )
+        else:
+            return TradeIntel(
+                exports_disrupted={"LPG": False, "DIESEL": True, "WHEAT": True, "PHARMA": False},
+                needs_inbound={"LPG": False, "DIESEL": False, "WHEAT": False, "PHARMA": True},
+                commodity_priority=["WHEAT", "DIESEL", "PHARMA", "LPG"],
+                context_summary="Generic shock — WHEAT and DIESEL exports disrupted.",
+                affected_countries_hint=kwargs.get("country_codes") or [],
+                from_llm=True,
+            )
+
+    # Patch at the site where ripple_service resolved the name
+    import app.services.ripple_service as rs
+    monkeypatch.setattr(rs, "query_trade_intel", _fake)
+    return _fake
+

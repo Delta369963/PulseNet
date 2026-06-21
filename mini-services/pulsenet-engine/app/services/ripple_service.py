@@ -355,13 +355,13 @@ def _build_exposures(s, agg, suppliers, supplier_ids, commodity_by_id, shock, se
             summary = intel.context_summary or "Crisis-driven need for emergency imports."
             if is_virtual:
                 path = (
-                    f"[{shock.type.upper()}] {consumer.name} requires emergency {cm.name} imports — "
-                    f"no established supply route. {summary}"
+                    f"[{shock.type.upper()}] {shock.title} → {consumer.name}: "
+                    f"critical {cm.name} import need (no established route). {summary}"
                 )
             else:
                 path = (
-                    f"[{shock.type.upper()}] {consumer.name} domestic crisis → critical {cm.name} import need. "
-                    f"{summary}"
+                    f"[{shock.type.upper()}] {shock.title} → {consumer.name}: "
+                    f"critical {cm.name} import need. {summary}"
                 )
         else:
             # Outbound: scale by severity + event type
